@@ -11,7 +11,7 @@ The power supply is the heart of the amplifier, converting 12-14.4V automotive p
 
 {{< graphviz >}}
 digraph dcdc_converter {
-    rankdir=LR
+    rankdir=TB
     node [shape=box, style="rounded,filled", fontname="Helvetica"]
     edge [fontname="Helvetica", fontsize=10]
 

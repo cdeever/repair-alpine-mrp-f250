@@ -13,7 +13,7 @@ The transformer (T901) divides the power supply into two electrically isolated s
 
 {{< graphviz >}}
 digraph power_flow {
-    rankdir=LR
+    rankdir=TB
     node [shape=box, style="rounded,filled", fontname="Helvetica"]
     edge [fontname="Helvetica", fontsize=10]
 
