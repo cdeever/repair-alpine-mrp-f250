@@ -19,7 +19,10 @@ This section covers common failure modes and step-by-step repair procedures for 
 ## Common Failure Categories
 
 ### [DC/DC Converter Failures]({{< relref "/docs/repair/dcdc-failures" >}})
-FET failures, gate driver issues, rectifier problems, and transformer faults.
+FET failures, gate driver issues, and rectifier problems.
+
+### [Transformer Repair]({{< relref "/docs/repair/transformer-repair" >}})
+Options for repairing or rewinding the unobtainable T901 transformer.
 
 ### [Output Stage Failures]({{< relref "/docs/repair/output-failures" >}})
 Output transistor failures, driver failures, and bias problems.

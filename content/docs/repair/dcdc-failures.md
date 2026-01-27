@@ -181,12 +181,13 @@ Measure winding resistances:
 
 ### Repair
 
-Transformer replacement is the only option if failed. Part number: 25E39082S01
+The transformer is a custom Alpine part that is essentially unobtainable. Your options are:
 
-{{< hint info >}}
-**Transformer Rewind**
-In some cases, a specialty shop can rewind the transformer. The ratio is 5:8:1. This may be more economical than finding an original part.
-{{< /hint >}}
+1. **Rewind the existing transformer** - If the ferrite core is intact
+2. **Find a donor** - From another MRP-F250 or similar amplifier
+3. **Custom fabrication** - Wind a new transformer from scratch
+
+See [Transformer Repair]({{< relref "/docs/repair/transformer-repair" >}}) for detailed procedures on rewinding and fabrication.
 
 ---
 
