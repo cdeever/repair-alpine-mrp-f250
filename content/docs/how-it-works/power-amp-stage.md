@@ -11,25 +11,48 @@ The power amplifier converts the low-level preamp signal into high-current drive
 
 Each channel is identical in design. The schematic shows channels 1-4 with components numbered in the 100s, 200s, 300s, and 400s respectively.
 
-```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                         POWER AMP (Per Channel)                            │
-│                                                                            │
-│  From      ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐       │
-│  Preamp ──▶│  INPUT  │───▶│ VOLTAGE │───▶│ DRIVER  │───▶│ OUTPUT  │──▶ SP │
-│            │  STAGE  │    │  AMP    │    │  STAGE  │    │  STAGE  │       │
-│            │  Q151   │    │Q153-158 │    │Q159-160 │    │Q161-162 │       │
-│            └─────────┘    └─────────┘    └─────────┘    └─────────┘       │
-│                 │              │              │              │             │
-│                 └──────────────┴──────────────┴──────────────┘             │
-│                              FEEDBACK NETWORK                              │
-│                                                                            │
-│                              ┌─────────┐                                   │
-│                              │  MUTE   │◀── From Protection               │
-│                              │ Q152    │                                   │
-│                              └─────────┘                                   │
-└────────────────────────────────────────────────────────────────────────────┘
-```
+{{< graphviz >}}
+digraph power_amp {
+    rankdir=TB
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11]
+    edge [fontname="Helvetica", fontsize=9]
+
+    // Input/Output
+    preamp [label="From\nPreamp", fillcolor="#e8f4e8"]
+    speaker [label="To\nSpeaker", fillcolor="#d9fbd9"]
+    protection [label="From\nProtection\nCircuit", fillcolor="#fff2cc"]
+
+    subgraph cluster_poweramp {
+        label="POWER AMP (Per Channel)"
+        style="dashed"
+        color="#d94a4a"
+
+        // Signal stages
+        input [label="Input Stage\nQ151\n2SC3326", fillcolor="#d9e8fb"]
+        vas [label="Voltage Amp\nQ153-Q158\nDiff Pair + VAS", fillcolor="#d9e8fb"]
+        driver [label="Driver Stage\nQ159/Q160\n2SC2235/2SA965", fillcolor="#ffd9d9"]
+        output [label="Output Stage\nQ161/Q162\n2SC5100/2SA1908", fillcolor="#ffd9d9"]
+
+        // Mute
+        mute [label="Mute\nQ152\n2SC4207", fillcolor="#fff2cc"]
+
+        // Feedback
+        feedback [label="Feedback\nNetwork", fillcolor="#e8e8e8"]
+    }
+
+    // Main signal flow
+    preamp -> input -> vas -> driver -> output -> speaker
+
+    // Feedback path
+    output -> feedback [style=dashed, dir=back]
+    feedback -> input [style=dashed]
+    feedback -> vas [style=dashed]
+
+    // Mute control
+    protection -> mute [label="mute signal"]
+    mute -> input [style=dotted, label="shunt"]
+}
+{{< /graphviz >}}
 
 ## Stage-by-Stage Analysis
 

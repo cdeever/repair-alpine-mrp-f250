@@ -9,19 +9,47 @@ The preamp stage processes the input signal before it reaches the power amplifie
 
 ## Signal Flow
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            PREAMP STAGE (Per Channel Pair)                  │
-│                                                                             │
-│  RCA Input ─┐                                                               │
-│             ├──▶ ISO AMP ──▶ GAIN ──▶ BASS EQ ──▶ VARIABLE ──▶ To Power   │
-│  SP Input ──┘    IC501-504   VR501-4   SW501/503   FILTER       Amp        │
-│                                                    VR503/504               │
-│                                                                             │
-│  LINE OUT ◀──── BUFFER ◀──── MIX                                           │
-│                 IC507-508                                                   │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+{{< graphviz >}}
+digraph preamp_signal_flow {
+    rankdir=TB
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11]
+    edge [fontname="Helvetica", fontsize=9]
+
+    subgraph cluster_preamp {
+        label="PREAMP STAGE (Per Channel Pair)"
+        style="dashed"
+        color="#4a90d9"
+
+        // Inputs
+        rca [label="RCA Input\nPJ501", fillcolor="#e8f4e8"]
+        sp [label="Speaker Input\nCN501", fillcolor="#e8f4e8"]
+
+        // Signal chain
+        iso [label="Isolation Amp\nIC501-504\nNJM4565M", fillcolor="#d9e8fb"]
+        gain [label="Gain Control\nVR501-504", fillcolor="#fff2cc"]
+        bass [label="Bass EQ\nSW501/503", fillcolor="#fff2cc"]
+        filter [label="Variable Filter\nVR503/504\nHPF/LPF/FLAT", fillcolor="#fff2cc"]
+        outbuf [label="Output Buffer\nIC516-518", fillcolor="#d9e8fb"]
+
+        // Line out path
+        mix [label="Mix", fillcolor="#e8e8e8"]
+        buffer [label="Buffer\nIC507-508", fillcolor="#d9e8fb"]
+        lineout [label="Line Out\nPRE OUT", fillcolor="#d9fbd9"]
+
+        // Output
+        toamp [label="To Power Amp", fillcolor="#d9fbd9"]
+    }
+
+    // Main signal flow
+    rca -> iso
+    sp -> iso
+    iso -> gain -> bass -> filter -> outbuf -> toamp
+
+    // Line out tap
+    gain -> mix [style=dashed]
+    mix -> buffer -> lineout
+}
+{{< /graphviz >}}
 
 ## Input Section
 
