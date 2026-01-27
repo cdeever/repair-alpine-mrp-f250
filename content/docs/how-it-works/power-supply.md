@@ -9,47 +9,58 @@ The power supply is the heart of the amplifier, converting 12-14.4V automotive p
 
 ## Block Diagram
 
-```
-                                    ┌─────────────────────────────────────┐
-                                    │         SECONDARY SIDE              │
-┌────────────┐                      │                                     │
-│  BATTERY   │     ┌─────────┐      │   ┌───────┐    ┌─────────┐         │
-│  +12-14.4V │────▶│  FUSES  │──────┼──▶│ T901  │───▶│ D802/803│──▶ ±25V │
-│            │     │ F901/902│      │   │ XFMR  │    │ Rectify │         │
-└────────────┘     │  15A×2  │      │   └───┬───┘    └─────────┘         │
-                   └────┬────┘      │       │                             │
-                        │           │       │        ┌─────────┐         │
-                        ▼           │       └───────▶│ D801/808│──▶ ±23V │
-                   ┌─────────┐      │                │ Rectify │         │
-                   │  L920   │      │                └─────────┘         │
-                   │ Choke   │      │                                     │
-                   └────┬────┘      └─────────────────────────────────────┘
-                        │
-                        ▼
-┌───────────────────────────────────────────────────────────────┐
-│                      PRIMARY SIDE                              │
-│                                                                │
-│   ┌─────────┐      ┌─────────────┐      ┌──────────────────┐  │
-│   │  IC920  │─────▶│  Q901/Q902  │─────▶│  Q903-Q906       │  │
-│   │ uPC494  │      │ Gate Drivers│      │  Switching FETs  │  │
-│   │   PWM   │      │  2SB1132×2  │      │  2SK3662×4       │  │
-│   └─────────┘      └─────────────┘      └────────┬─────────┘  │
-│        │                                         │             │
-│        │           ┌─────────────┐               │             │
-│        └──────────▶│  Feedback   │◀──────────────┘             │
-│                    │  & Control  │                             │
-│                    └─────────────┘                             │
-└───────────────────────────────────────────────────────────────┘
+{{< graphviz >}}
+digraph dcdc_converter {
+    rankdir=LR
+    node [shape=box, style="rounded,filled", fontname="Helvetica"]
+    edge [fontname="Helvetica", fontsize=10]
 
-                              │
-                              ▼
-              ┌───────────────────────────────┐
-              │      VOLTAGE REGULATORS       │
-              │                               │
-              │   Q801 (2SC3421) ──▶ +14V    │
-              │   Q802 (2SA1358) ──▶ -14V    │
-              └───────────────────────────────┘
-```
+    // Input
+    battery [label="Battery\n12-14.4V", fillcolor="#e8f4e8"]
+
+    subgraph cluster_primary {
+        label="PRIMARY SIDE"
+        style="dashed"
+        color="#4a90d9"
+
+        fuses [label="Fuses\nF901/F902\n15A×2", fillcolor="#fff2cc"]
+        filter [label="Input Filter\nL920\nC905/C906", fillcolor="#fff2cc"]
+        pwm [label="PWM Controller\nIC920 (uPC494)", fillcolor="#d9e8fb"]
+        drivers [label="Gate Drivers\nQ901/Q902\n2SB1132", fillcolor="#d9e8fb"]
+        fets [label="Switching FETs\nQ903-Q906\n2SK3662", fillcolor="#ffd9d9"]
+    }
+
+    subgraph cluster_xfmr {
+        label="ISOLATION"
+        style="filled"
+        color="#f0f0f0"
+
+        xfmr [label="Transformer\nT901\n5:8:1", shape=box3d, fillcolor="#e8e8e8"]
+    }
+
+    subgraph cluster_secondary {
+        label="SECONDARY SIDE"
+        style="dashed"
+        color="#d94a4a"
+
+        rect_25 [label="Rectifiers\nD802/D803\nFCH10A15", fillcolor="#fff2cc"]
+        rect_23 [label="Rectifiers\nD801/D808\n11EFS2", fillcolor="#fff2cc"]
+        rail_25 [label="±25V Rails\nOutput Stage", fillcolor="#d9fbd9"]
+        rail_23 [label="±23V Rails\nDrivers", fillcolor="#d9fbd9"]
+        reg [label="Regulators\nQ801/Q802", fillcolor="#d9e8fb"]
+        rail_14 [label="±14V Rails\nPreamp", fillcolor="#d9fbd9"]
+    }
+
+    // Power flow
+    battery -> fuses -> filter
+    filter -> fets
+    pwm -> drivers -> fets [style=dashed, label="control"]
+    fets -> xfmr
+    xfmr -> rect_25 -> rail_25
+    xfmr -> rect_23 -> rail_23
+    rail_23 -> reg -> rail_14
+}
+{{< /graphviz >}}
 
 ## Component Details
 
