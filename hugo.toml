@@ -1,0 +1,32 @@
+baseURL = "https://cdeever.github.io/repair-alpine-mrp-f250/"
+languageCode = "en-us"
+title = "Alpine MRP-F250 Repair Guide"
+theme = "hugo-book"
+
+# Enable git-based last modified dates
+enableGitInfo = true
+
+# Book theme configuration
+[params]
+  # Sidebar title
+  BookTitle = "Contents"
+  # Theme: auto follows system preference
+  BookTheme = "auto"
+  # Show table of contents on the right
+  BookToC = true
+  # Enable search
+  BookSearch = true
+  # Repository for commit links
+  BookRepo = "https://github.com/cdeever/repair-alpine-mrp-f250"
+  # Section to use for the homepage
+  BookSection = "docs"
+  # Set site description for SEO
+  description = "Comprehensive repair guide for the Alpine MRP-F250 4-channel car amplifier"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+  [markup.tableOfContents]
+    startLevel = 1
+    endLevel = 4
