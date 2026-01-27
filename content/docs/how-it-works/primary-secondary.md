@@ -17,51 +17,37 @@ digraph power_flow {
     node [shape=box, style="rounded,filled", fontname="Helvetica"]
     edge [fontname="Helvetica", fontsize=10]
 
-    subgraph cluster_primary {
-        label="PRIMARY SIDE\n(Battery Input)"
-        style="dashed"
-        color="#4a90d9"
+    // Primary side
+    battery [label="Battery\n12-14.4V", fillcolor="#e8f4e8"]
+    fuses [label="Fuses F901/F902\n15A×2", fillcolor="#fff2cc"]
+    filter1 [label="Input Filter\nL920, C905/906", fillcolor="#fff2cc"]
+    pwm [label="PWM Controller\nIC920 (uPC494)", fillcolor="#d9e8fb"]
+    drivers [label="Gate Drivers\nQ901/Q902", fillcolor="#d9e8fb"]
+    fets [label="Switching FETs\nQ903-Q906", fillcolor="#ffd9d9"]
 
-        battery [label="Battery\n12-14.4V", fillcolor="#e8f4e8"]
-        fuses [label="Fuses\nF901/F902\n15A×2", fillcolor="#fff2cc"]
-        filter1 [label="Input Filter\nL920, C905/906", fillcolor="#fff2cc"]
-        pwm [label="PWM Controller\nIC920 (uPC494)", fillcolor="#d9e8fb"]
-        drivers [label="Gate Drivers\nQ901/Q902", fillcolor="#d9e8fb"]
-        fets [label="Switching FETs\nQ903-Q906", fillcolor="#ffd9d9"]
-    }
+    // Isolation
+    xfmr [label="Transformer T901\n(Isolation Barrier)\nMultiple Secondary Windings", shape=box3d, fillcolor="#e8e8e8"]
 
-    subgraph cluster_xfmr {
-        label="ISOLATION"
-        style="filled"
-        color="#f0f0f0"
+    // Secondary side - combined view
+    rectifiers [label="Rectifiers\nD802/D803 → ±25V\nD801/D808 → ±23V", fillcolor="#fff2cc"]
+    filters [label="Filter Capacitors\nC806/C807 (±25V)\nC808/C809 (±23V)", fillcolor="#fff2cc"]
+    rails [label="Output Rails\n±25V → Output Transistors\n±23V → Driver Transistors", fillcolor="#d9fbd9"]
+    reg [label="Linear Regulators\nQ801/Q802", fillcolor="#d9e8fb"]
+    rail14 [label="±14V Rails\nPreamp Op-Amps", fillcolor="#d9fbd9"]
 
-        xfmr [label="Transformer\nT901\n5:8:1", shape=box3d, fillcolor="#e8e8e8"]
-    }
+    // Labels for sides
+    primary_label [label="PRIMARY SIDE\n(Battery Ground Reference)", shape=none, fillcolor="white"]
+    secondary_label [label="SECONDARY SIDE\n(Amplifier Ground Reference)", shape=none, fillcolor="white"]
 
-    subgraph cluster_secondary {
-        label="SECONDARY SIDE\n(Amplifier Power)"
-        style="dashed"
-        color="#d94a4a"
-
-        rect25 [label="Rectifiers\nD802/D803", fillcolor="#fff2cc"]
-        rect23 [label="Rectifiers\nD801/D808", fillcolor="#fff2cc"]
-        filter25 [label="Filter\nC806/C807", fillcolor="#fff2cc"]
-        filter23 [label="Filter\nC808/C809", fillcolor="#fff2cc"]
-        rail25 [label="±25V Rails\nOutput Stage", fillcolor="#d9fbd9"]
-        rail23 [label="±23V Rails\nDrivers", fillcolor="#d9fbd9"]
-        reg [label="Regulators\nQ801/Q802", fillcolor="#d9e8fb"]
-        rail14 [label="±14V Rails\nPreamp", fillcolor="#d9fbd9"]
-    }
-
-    battery -> fuses -> filter1
-    filter1 -> fets
+    // Flow
+    battery -> fuses -> filter1 -> fets
     pwm -> drivers -> fets [style=dashed, label="control"]
-    fets -> xfmr
-    xfmr -> rect25
-    xfmr -> rect23
-    rect25 -> filter25 -> rail25
-    rect23 -> filter23 -> rail23
-    rail23 -> reg -> rail14
+    fets -> xfmr -> rectifiers -> filters -> rails
+    rails -> reg -> rail14
+
+    // Position labels
+    {rank=same; battery; primary_label}
+    {rank=same; rails; secondary_label}
 }
 {{< /graphviz >}}
 
