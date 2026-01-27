@@ -9,34 +9,53 @@ The MRP-F250 includes multiple protection circuits to prevent damage from fault 
 
 ## Protection Overview
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    PROTECTION SYSTEM                            │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
-│  │   OUTPUT    │  │  THERMAL    │  │    +B       │             │
-│  │   CURRENT   │  │   DETECT    │  │  VOLTAGE    │             │
-│  │   DETECT    │  │             │  │   DETECT    │             │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘             │
-│         │                │                │                     │
-│         ▼                ▼                ▼                     │
-│  ┌─────────────────────────────────────────────┐               │
-│  │              MUTE LOGIC                      │               │
-│  │         (Combines all fault signals)         │               │
-│  └─────────────────────┬───────────────────────┘               │
-│                        │                                        │
-│                        ▼                                        │
-│  ┌─────────────────────────────────────────────┐               │
-│  │              MUTE DRIVER                     │               │
-│  │     Activates Q152/Q252/Q352/Q452           │               │
-│  └─────────────────────────────────────────────┘               │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐                              │
-│  │  DC OFFSET  │  │  SET TIME   │                              │
-│  │   DETECT    │  │    MUTE     │                              │
-│  └─────────────┘  └─────────────┘                              │
-└─────────────────────────────────────────────────────────────────┘
-```
+{{< graphviz >}}
+digraph protection_system {
+    rankdir=TB
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11]
+    edge [fontname="Helvetica", fontsize=9]
+
+    subgraph cluster_protection {
+        label="PROTECTION SYSTEM"
+        style="dashed"
+        color="#d94a4a"
+
+        // Detection circuits
+        subgraph cluster_detectors {
+            label=""
+            style="invis"
+            rank=same
+
+            current [label="Output Current\nDetect\nQ163/263/363/463", fillcolor="#fff2cc"]
+            thermal [label="Thermal\nDetect\nTH920-924", fillcolor="#fff2cc"]
+            voltage [label="+B Voltage\nDetect\nOver/Under", fillcolor="#fff2cc"]
+            dc [label="DC Offset\nDetect", fillcolor="#fff2cc"]
+            settime [label="Set Time\nMute\nQ930", fillcolor="#fff2cc"]
+        }
+
+        // Logic and driver
+        logic [label="Mute Logic\n(Combines all fault signals)", fillcolor="#d9e8fb"]
+        driver [label="Mute Driver\nQ926/Q927", fillcolor="#d9e8fb"]
+
+        // Output
+        mute [label="Mute Transistors\nQ152/Q252/Q352/Q452", fillcolor="#ffd9d9"]
+    }
+
+    // Connections to logic
+    current -> logic
+    thermal -> logic
+    voltage -> logic
+    dc -> logic
+    settime -> logic
+
+    // Logic to driver to mute
+    logic -> driver -> mute
+
+    // Output to amp stages
+    amp [label="Power Amp\nSignal Shunted\nto Ground", fillcolor="#e8e8e8"]
+    mute -> amp
+}
+{{< /graphviz >}}
 
 ## Protection Types
 
