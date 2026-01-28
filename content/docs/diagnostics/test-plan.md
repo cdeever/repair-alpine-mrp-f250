@@ -348,3 +348,180 @@ Quick check for obvious shorts before applying power.
    - Current should remain reasonable (<500mA at idle)
 5. **If voltage drops or current spikes - STOP IMMEDIATELY**
 6. Check for heat on any components
+
+---
+
+## Post-Repair Verification
+
+{{< hint warning >}}
+**Only proceed after Power-Up Test passes** - These tests verify the amplifier is fully functional before connecting to real speakers.
+{{< /hint >}}
+
+### Phase 10: Power Supply Rail Verification
+
+**Setup:** Bench supply at 14.4V, 2A limit, no load connected
+
+| Rail | Test Point | Expected | Actual | Pass/Fail |
+|------|------------|----------|--------|-----------|
+| +25V | C806 positive | +24 to +26V | | |
+| -25V | C807 negative | -24 to -26V | | |
+| +23V | C808 positive | +22 to +24V | | |
+| -23V | C809 negative | -22 to -24V | | |
+| +14V | Near IC501-518 | +13.5 to +14.5V | | |
+| -14V | Near IC501-518 | -13.5 to -14.5V | | |
+| Vref | IC920 pin 14 | +5.0V ±0.1V | | |
+
+**Idle Current Draw:**
+
+| Condition | Expected | Actual | Pass/Fail |
+|-----------|----------|--------|-----------|
+| No signal, no load | 0.5 - 1.2A | | |
+
+---
+
+### Phase 11: Signal Path Verification (No Load)
+
+**Setup:**
+- Bench supply at 14.4V, 2A limit
+- Signal generator: 1kHz sine wave, 200mV RMS
+- Oscilloscope on outputs
+- No load connected
+
+**Input to Output Test:**
+
+| Channel | Input | Output Test Point | Expected | Actual | Pass/Fail |
+|---------|-------|-------------------|----------|--------|-----------|
+| CH1 | RCA L (Front) | Speaker terminal CH1 | Clean sine, no clipping | | |
+| CH2 | RCA R (Front) | Speaker terminal CH2 | Clean sine, no clipping | | |
+| CH3 | RCA L (Rear) | Speaker terminal CH3 | Clean sine, no clipping | | |
+| CH4 | RCA R (Rear) | Speaker terminal CH4 | Clean sine, no clipping | | |
+
+**Gain Control Test:** (VR503/VR504)
+- [ ] Turning gain down reduces output amplitude
+- [ ] Turning gain up increases output amplitude
+- [ ] No distortion or oscillation at any gain setting
+
+**Filter/Crossover Test:** (if applicable)
+- [ ] HPF switch attenuates low frequencies
+- [ ] LPF switch attenuates high frequencies
+
+---
+
+### Phase 12: Dummy Load Testing
+
+{{< hint info >}}
+**Dummy Load Resistors:** Use non-inductive power resistors. Mount on heatsink or allow air cooling.
+{{< /hint >}}
+
+**Recommended Dummy Loads:**
+
+| Load Type | Resistance | Power Rating | Use For |
+|-----------|------------|--------------|---------|
+| 4Ω | 4Ω | ≥50W per channel | Normal speaker load |
+| 8Ω | 8Ω | ≥25W per channel | Light load testing |
+| 2Ω | 2Ω | ≥100W per channel | Stress testing (optional) |
+
+#### 12.1 Low Power Load Test
+
+**Setup:**
+- Bench supply: 14.4V, 5A limit
+- Signal: 1kHz sine, adjust for 1W output (~2V RMS into 4Ω)
+- Dummy load: 4Ω per channel
+
+| Test | Expected | Actual | Pass/Fail |
+|------|----------|--------|-----------|
+| Output voltage (1W into 4Ω) | ~2V RMS | | |
+| Current draw (all 4 ch, 1W each) | ~2-3A | | |
+| Output waveform | Clean sine | | |
+| Any channel distorted? | No | | |
+| Heatsink temperature after 1 min | Warm, not hot | | |
+
+#### 12.2 Medium Power Load Test
+
+**Setup:**
+- Bench supply: 14.4V, 10A limit (or battery)
+- Signal: 1kHz sine, adjust for 10W output (~6.3V RMS into 4Ω)
+- Dummy load: 4Ω per channel
+
+| Test | Expected | Actual | Pass/Fail |
+|------|----------|--------|-----------|
+| Output voltage (10W into 4Ω) | ~6.3V RMS | | |
+| Current draw (all 4 ch, 10W each) | ~8-12A | | |
+| Output waveform | Clean sine | | |
+| Clipping onset | None at 10W | | |
+| Heatsink temperature after 2 min | Hot but manageable | | |
+
+#### 12.3 Full Power Test (Use Car Battery or High-Current Supply)
+
+{{< hint danger >}}
+**Caution:** Full power testing generates significant heat. Monitor continuously. Have fire extinguisher nearby.
+{{< /hint >}}
+
+**Setup:**
+- Power: Car battery or 14.4V supply capable of 20A+
+- Signal: 1kHz sine, adjust for rated power (40W = ~12.6V RMS into 4Ω)
+- Dummy load: 4Ω per channel
+- Duration: Brief bursts only (5-10 seconds)
+
+| Test | Expected | Actual | Pass/Fail |
+|------|----------|--------|-----------|
+| Output voltage (40W into 4Ω) | ~12.6V RMS | | |
+| Waveform at full power | Clean until clipping | | |
+| Symmetrical clipping? | Yes (equal +/-) | | |
+| Any channel weak? | No | | |
+| Protection circuit trigger? | No (unless overdriven) | | |
+
+---
+
+### Phase 13: Thermal Verification
+
+**Setup:** Run at medium power (10W/ch) for 5 minutes with dummy loads
+
+| Component | Location | Expected | Actual | Pass/Fail |
+|-----------|----------|----------|--------|-----------|
+| Q903-Q906 (FETs) | On heatsink | Warm to hot, even heat | | |
+| Q161/Q261/Q361/Q461 | Output transistors | Warm | | |
+| Q901/Q902 | Gate drivers | Slightly warm | | |
+| T901 | Transformer | Warm | | |
+| Heatsink | Main chassis | Hot but touchable (<60°C) | | |
+| Any component smoking? | Entire board | NO | | |
+| Unusual smells? | Entire board | NO | | |
+
+---
+
+### Phase 14: Protection Circuit Verification
+
+**Test each protection feature:**
+
+| Protection | How to Test | Expected Response | Actual | Pass/Fail |
+|------------|-------------|-------------------|--------|-----------|
+| Thermal | Run until heatsink hot, then check | Output mutes, LED may blink | | |
+| DC Offset | Inject DC at input (carefully) | Output mutes | | |
+| Short circuit | Briefly short output (use fuse in line) | Output mutes, no damage | | |
+| Overvoltage | Raise supply to 16V briefly | Should continue operating | | |
+| Undervoltage | Lower supply to 10V | May mute or reduce output | | |
+
+{{< hint warning >}}
+**Short Circuit Test:** Place a 1A fast-blow fuse in series with the short. This protects both the amp and your test setup.
+{{< /hint >}}
+
+---
+
+### Phase 15: Final Acceptance Checklist
+
+| Item | Verified |
+|------|----------|
+| All 4 channels produce clean output | [ ] |
+| Gain controls work on all channels | [ ] |
+| No excessive idle current draw | [ ] |
+| No overheating at moderate power | [ ] |
+| Protection circuits functional | [ ] |
+| No audible noise/hum at idle | [ ] |
+| Power LED illuminates | [ ] |
+| No burning smell during testing | [ ] |
+
+**Sign-off:**
+
+- Date: _____________
+- Tested by: _____________
+- Ready for installation: [ ] Yes  [ ] No - needs: _____________
