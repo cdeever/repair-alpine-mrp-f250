@@ -12,44 +12,43 @@ This section explains the circuit architecture of the Alpine MRP-F250 amplifier 
 
 {{< graphviz >}}
 digraph MRP_F250 {
-    rankdir=LR
+    rankdir=TB
+    splines=ortho
     node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11]
     edge [fontname="Helvetica", fontsize=9]
 
-    // Main signal path
-    subgraph cluster_main {
-        label="ALPINE MRP-F250"
-        labelloc=t
-        style=rounded
-        bgcolor="#f8f9fa"
+    // Main signal path (top row)
+    input [label="INPUT\nSTAGE", fillcolor="#e3f2fd"]
+    preamp [label="PREAMP\nSTAGE", fillcolor="#e3f2fd"]
+    poweramp [label="POWER\nAMP", fillcolor="#fff3e0"]
+    output [label="OUTPUT\nSTAGE", fillcolor="#fff3e0"]
+    speakers [label="Speakers", shape=ellipse, fillcolor="#c8e6c9"]
 
-        input [label="INPUT\nSTAGE", fillcolor="#e3f2fd"]
-        preamp [label="PREAMP\nSTAGE", fillcolor="#e3f2fd"]
-        poweramp [label="POWER\nAMP", fillcolor="#fff3e0"]
-        output [label="OUTPUT\nSTAGE", fillcolor="#fff3e0"]
-        speakers [label="Speakers", shape=ellipse, fillcolor="#c8e6c9"]
+    // Protection
+    protection [label="PROTECTION\nCIRCUITS", fillcolor="#ffcdd2"]
 
-        // Protection
-        protection [label="PROTECTION\nCIRCUITS", fillcolor="#ffcdd2"]
+    // Power supply
+    battery [label="+12V Battery", shape=ellipse, fillcolor="#fff9c4"]
+    powersupply [label="POWER SUPPLY (DC/DC)\n+B → DC/DC Conv → ±25V, ±23V, ±14V", fillcolor="#e1bee7"]
 
-        // Power supply
-        battery [label="+12V\nBattery", shape=ellipse, fillcolor="#fff9c4"]
-        powersupply [label="POWER SUPPLY (DC/DC)\n+B → DC/DC Conv → ±25V, ±23V, ±14V", fillcolor="#e1bee7"]
-    }
-
-    // Signal flow
+    // Signal flow (horizontal)
+    { rank=same; input; preamp; poweramp; output; speakers }
     input -> preamp -> poweramp -> output -> speakers
 
-    // Protection feedback
+    // Protection row
+    { rank=same; protection }
     output -> protection [style=dashed, label="monitor"]
 
-    // Power distribution
+    // Power supply row
+    { rank=same; battery; powersupply }
     battery -> powersupply
-    powersupply -> input [style=dotted, constraint=false]
-    powersupply -> preamp [style=dotted, constraint=false]
-    powersupply -> poweramp [style=dotted, constraint=false]
-    powersupply -> output [style=dotted, constraint=false]
     protection -> powersupply [style=dashed, label="control"]
+
+    // Power distribution (vertical)
+    powersupply -> input [style=dotted]
+    powersupply -> preamp [style=dotted]
+    powersupply -> poweramp [style=dotted]
+    powersupply -> output [style=dotted]
 }
 {{< /graphviz >}}
 
