@@ -7,6 +7,10 @@ weight: 1
 
 This test plan was developed for a specific failure case but applies to general DC/DC converter and power supply troubleshooting.
 
+{{< hint info >}}
+**Fresh Start Approach:** This plan is structured to verify everything from scratch, setting aside previous assumptions. Let the measurements guide the diagnosis.
+{{< /hint >}}
+
 ## Symptom Summary
 
 - Smoked twice (original failure + after FET replacement)
@@ -25,7 +29,97 @@ This test plan was developed for a specific failure case but applies to general 
 
 ---
 
-## Phase 1: Gate Driver Transistors
+## Phase 0: Fresh Start - Visual & Basic Verification
+
+{{< hint warning >}}
+**START HERE** - Before any electrical tests, verify the fundamentals with fresh eyes.
+{{< /hint >}}
+
+### 0.1 Visual Inspection
+
+Examine the entire board carefully under good lighting (magnification helps).
+
+| Check | Location | Observations |
+|-------|----------|--------------|
+| Burned/discolored components | Entire board | |
+| Burned traces or pads | Near power section | |
+| Cracked solder joints | Around transformer T901 | |
+| Bulging capacitors | C905, C906, C806, C807 | |
+| Physical damage to FET pads | Q903-Q906 locations | |
+| Solder bridges | All ICs, fine-pitch areas | |
+| Loose wires or connectors | All connectors | |
+| Signs of previous repair | Entire board | |
+
+### 0.2 Basic Continuity (Power Off, FETs Removed)
+
+| Test | From | To | Expected | Actual | Pass/Fail |
+|------|------|-----|----------|--------|-----------|
+| Fuse F901 | Pin 1 | Pin 2 | <0.1Ω (or OL if blown) | | |
+| Fuse F902 | Pin 1 | Pin 2 | <0.1Ω (or OL if blown) | | |
+| Ground continuity | CN921 GND | Heatsink | <0.5Ω | | |
+| Ground continuity | CN921 GND | Secondary GND pad | <0.5Ω | | |
+| B+ path | CN921 B+ | After L920 | <1Ω | | |
+
+### 0.3 Dead Short Check (Power Off, FETs Removed)
+
+Quick check for obvious shorts before applying power.
+
+| Test | Positive | Negative | Expected | Actual | Pass/Fail |
+|------|----------|----------|----------|--------|-----------|
+| B+ to GND | B+ terminal | GND terminal | >10Ω initially, rising | | |
+| Primary winding to GND | T901 primary | GND | OL or very high | | |
+
+---
+
+## Phase 1: PWM Controller Verification
+
+{{< hint danger >}}
+**RE-VERIFY FROM SCRATCH** - Previous tests indicated IC920 was working, but let's confirm with fresh measurements.
+{{< /hint >}}
+
+### 1.1 Unpowered IC920 Checks
+
+| Test | Measurement | Expected | Actual | Pass/Fail |
+|------|-------------|----------|--------|-----------|
+| Pin 4 to GND | Continuity | <1Ω | | |
+| Pin 7 to GND | Continuity | <1Ω | | |
+| Pin 16 to GND | Continuity | <1Ω | | |
+| Pin 11 to B+ rail | Continuity | Low Ω | | |
+| Pin 12 to B+ rail | Continuity | Low Ω | | |
+
+### 1.2 Powered IC920 Checks (FETs Removed)
+
+**Setup:** Bench supply at 14.4V, 200mA current limit, REM jumpered to B+
+
+| Pin | Function | Expected | Actual | Pass/Fail |
+|-----|----------|----------|--------|-----------|
+| 11 | Vcc | 14.4V | | |
+| 12 | Vcc | 14.4V | | |
+| 14 | Vref (5V reference) | 5.0V ±0.1V | | |
+| 4, 7, 16 | GND | 0V | | |
+| 5 | Ct (timing cap) | ~1.8V DC | | |
+| 6 | Rt (timing resistor) | ~3.8V DC | | |
+| 15 | Dead time control | ~2.5V DC | | |
+
+### 1.3 PWM Output Verification (Oscilloscope Required)
+
+**Setup:** Same as 1.2, probe on IC920 outputs
+
+| Test Point | Expected | Actual | Pass/Fail |
+|------------|----------|--------|-----------|
+| Pin 8 (Output A) | Square wave, ~100-200kHz | Freq: _____ | |
+| Pin 11 (Output B) | Square wave, ~100-200kHz | Freq: _____ | |
+| Duty cycle | ~45% (with dead time) | _____ % | |
+| Amplitude | 0V to ~14V | _____ V | |
+| Phase relationship | A & B opposite phase | Yes / No | |
+
+{{< hint info >}}
+**Note:** If PWM outputs are absent or abnormal, stop here - the controller or its support components need attention before proceeding.
+{{< /hint >}}
+
+---
+
+## Phase 2: Gate Driver Transistors
 
 {{< hint danger >}}
 **HIGHEST PRIORITY** - If damaged, FETs receive improper gate drive and run in linear mode causing thermal runaway.
@@ -63,7 +157,7 @@ This test plan was developed for a specific failure case but applies to general 
 
 ---
 
-## Phase 2: Secondary Rectifier Diodes
+## Phase 3: Secondary Rectifier Diodes
 
 {{< hint warning >}}
 **HIGH PRIORITY** - Shorted rectifier = dead short on transformer secondary = massive primary current
@@ -95,7 +189,7 @@ This test plan was developed for a specific failure case but applies to general 
 
 ---
 
-## Phase 3: Transformer T901
+## Phase 4: Transformer T901
 
 **Test Method:** IN-CIRCUIT
 
@@ -119,7 +213,7 @@ This test plan was developed for a specific failure case but applies to general 
 
 ---
 
-## Phase 4: Secondary Rail Load Test
+## Phase 5: Secondary Rail Load Test
 
 **Test Method:** IN-CIRCUIT (FETs removed)
 
@@ -140,7 +234,7 @@ This test plan was developed for a specific failure case but applies to general 
 
 ---
 
-## Phase 5: Voltage Regulator Transistors
+## Phase 6: Voltage Regulator Transistors
 
 **Test Method:** IN-CIRCUIT (preliminary)
 
@@ -161,41 +255,6 @@ This test plan was developed for a specific failure case but applies to general 
 | B-C forward | Collector | Base | 0.5-0.7V | | |
 | E-B reverse | Base | Emitter | OL | | |
 | C-B reverse | Base | Collector | OL | | |
-
----
-
-## Phase 6: PWM Controller IC920 (uPC494)
-
-**Test Method:** POWERED TEST (FETs removed, current limit 100-200mA)
-
-**Procedure:**
-1. Connect bench supply to B+ and GND (14.4V, 100mA limit)
-2. Ensure remote is triggered (REM terminal)
-3. Measure DC voltages at IC920 pins
-
-| Pin | Function | Expected | Actual | Pass/Fail |
-|-----|----------|----------|--------|-----------|
-| 1 | Feedback | 1.6V* | | |
-| 2 | Feedback | 2.5V | | |
-| 3 | Feedback | 0.1V | | |
-| 4 | GND | 0V | | |
-| 5 | Ct (timing) | 1.8V | | |
-| 6 | Rt (timing) | 3.8V | | |
-| 7 | GND | 0V | | |
-| 8 | Output A | Pulsing** | | |
-| 11 | Vcc | 14.4V | | |
-| 12 | Vcc | 14.4V | | |
-| 14 | Vref | 5.0V | | |
-| 15 | Dead time | 2.5V | | |
-| 16 | GND | 0V | | |
-
-*Pin 1 varies with temperature
-**Use oscilloscope to verify ~100-200kHz switching pulses
-
-**Failure Indicators:**
-- Pin 14 (Vref) not at 5V = IC920 likely damaged
-- No pulses at outputs = controller not running
-- Vcc pins not at supply voltage = open connection
 
 ---
 
@@ -237,7 +296,7 @@ This test plan was developed for a specific failure case but applies to general 
 
 ---
 
-## Phase 9: B+ Input Path
+## Phase 9: B+ Input Path (Detailed)
 
 **Test Method:** IN-CIRCUIT
 
@@ -261,11 +320,15 @@ This test plan was developed for a specific failure case but applies to general 
 
 ### Components Verified Good
 
-| Ref | Description |
-|-----|-------------|
-| IC920 | PWM controller (pulses verified) |
-| Q161-Q462 | Output transistors |
-| | |
+| Ref | Description | Test Phase |
+|-----|-------------|------------|
+| | | |
+| | | |
+| | | |
+
+{{< hint info >}}
+**Note:** Starting fresh - populate this table only with components verified during THIS test sequence.
+{{< /hint >}}
 
 ---
 
