@@ -11,227 +11,208 @@ Use these decision trees to quickly identify the likely failure area based on sy
 
 ## Symptom: Amplifier Smokes on Power-Up
 
-```
-Amplifier smokes on power-up
-            │
-            ▼
-    ┌───────────────────┐
-    │ Where does smoke  │
-    │ come from?        │
-    └─────────┬─────────┘
-              │
-    ┌─────────┼─────────┬─────────────────┐
-    ▼         ▼         ▼                 ▼
- Output    Power     Can't Tell      Preamp
- Stage     Supply                    Area
-    │         │         │                 │
-    ▼         ▼         ▼                 ▼
- Check     Check     Remove FETs      Check
- Q161-162  Q903-906  Q903-906         ±14V
- Q261-262  Q901-902  Apply power      Rails
- Q361-362  D801-803  w/current        and
- Q461-462  D808      limit            Op-Amps
-    │         │         │
-    │         │         ▼
-    │         │    ┌────────────┐     Still
-    │         │    │Still draws │     smokes?
-    │         │    │high current│        │
-    │         │    └─────┬──────┘        ▼
-    │         │          │           Check
-    │         │    ┌─────┴─────┐     IC501-518
-    │         │    ▼           ▼     Q801-802
-    │         │   YES          NO
-    │         │    │            │
-    │         │    ▼            ▼
-    │         │  Short on    FETs or
-    │         │  secondary   gate drivers
-    │         │  Check       were the
-    │         │  D801-808    problem
-    │         │  T901
-    │         │  Rails
-    ▼         ▼
- Output    DC/DC
- stage     converter
- failure   failure
-```
+{{< graphviz >}}
+digraph smoke {
+    rankdir=TB
+    splines=ortho
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    start [label="Amplifier smokes\non power-up", fillcolor="#ffcccc"]
+    question [label="Where does smoke\ncome from?", shape=diamond, fillcolor="#fff2cc"]
+
+    output_area [label="Output\nStage", fillcolor="#e0e0e0"]
+    power_area [label="Power\nSupply", fillcolor="#e0e0e0"]
+    unknown [label="Can't Tell", fillcolor="#e0e0e0"]
+    preamp_area [label="Preamp\nArea", fillcolor="#e0e0e0"]
+
+    check_output [label="Check\nQ161-162, Q261-262\nQ361-362, Q461-462", fillcolor="#d9e8fb"]
+    check_power [label="Check\nQ903-906, Q901-902\nD801-803, D808", fillcolor="#d9e8fb"]
+    remove_fets [label="Remove FETs Q903-906\nApply power\nw/current limit", fillcolor="#d9e8fb"]
+    check_preamp [label="Check ±14V Rails\nand Op-Amps\nIC501-518, Q801-802", fillcolor="#d9e8fb"]
+
+    still_draws [label="Still draws\nhigh current?", shape=diamond, fillcolor="#fff2cc"]
+    yes_short [label="Short on secondary\nCheck D801-808\nT901, Rails", fillcolor="#ffcccc"]
+    no_fets [label="FETs or gate drivers\nwere the problem", fillcolor="#d9fbd9"]
+
+    output_fail [label="Output stage\nfailure", fillcolor="#ffcccc"]
+    dcdc_fail [label="DC/DC converter\nfailure", fillcolor="#ffcccc"]
+
+    start -> question
+    question -> output_area
+    question -> power_area
+    question -> unknown
+    question -> preamp_area
+
+    output_area -> check_output -> output_fail
+    power_area -> check_power -> dcdc_fail
+    preamp_area -> check_preamp
+
+    unknown -> remove_fets -> still_draws
+    still_draws -> yes_short [label="YES"]
+    still_draws -> no_fets [label="NO"]
+}
+{{< /graphviz >}}
 
 ---
 
 ## Symptom: No Output (Dead)
 
-```
-No output from amplifier
-            │
-            ▼
-    ┌───────────────────┐
-    │ Does LED light up?│
-    └─────────┬─────────┘
-              │
-        ┌─────┴─────┐
-        ▼           ▼
-       YES          NO
-        │            │
-        ▼            ▼
-    ┌────────┐   ┌────────────┐
-    │Check   │   │Check power │
-    │preamp  │   │supply      │
-    │& power │   │            │
-    │amp     │   │• Fuses     │
-    └────┬───┘   │• +B input  │
-         │       │• Remote    │
-         ▼       │• IC920     │
-    ┌────────┐   └────────────┘
-    │±14V OK?│
-    └────┬───┘
-         │
-    ┌────┴────┐
-    ▼         ▼
-   YES        NO
-    │          │
-    ▼          ▼
- Check      Check
- signal     Q801/Q802
- path       DC/DC
- through    converter
- preamp     output
-```
+{{< graphviz >}}
+digraph no_output {
+    rankdir=TB
+    splines=ortho
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    start [label="No output from\namplifier", fillcolor="#ffcccc"]
+    led_q [label="Does LED\nlight up?", shape=diamond, fillcolor="#fff2cc"]
+
+    led_yes [label="LED ON", fillcolor="#d9fbd9"]
+    led_no [label="LED OFF", fillcolor="#ffcccc"]
+
+    check_preamp [label="Check preamp\n& power amp", fillcolor="#d9e8fb"]
+    check_power [label="Check power supply\n• Fuses\n• +B input\n• Remote\n• IC920", fillcolor="#d9e8fb"]
+
+    v14_q [label="±14V OK?", shape=diamond, fillcolor="#fff2cc"]
+
+    v14_yes [label="Check signal path\nthrough preamp", fillcolor="#d9e8fb"]
+    v14_no [label="Check Q801/Q802\nDC/DC converter\noutput", fillcolor="#d9e8fb"]
+
+    start -> led_q
+    led_q -> led_yes [label="YES"]
+    led_q -> led_no [label="NO"]
+
+    led_yes -> check_preamp -> v14_q
+    led_no -> check_power
+
+    v14_q -> v14_yes [label="YES"]
+    v14_q -> v14_no [label="NO"]
+}
+{{< /graphviz >}}
 
 ---
 
 ## Symptom: Distorted Output
 
-```
-Distorted output
-        │
-        ▼
-┌───────────────────┐
-│All channels or    │
-│specific channel?  │
-└─────────┬─────────┘
-          │
-    ┌─────┴─────┐
-    ▼           ▼
-   ALL       SPECIFIC
-    │         CHANNEL
-    │            │
-    ▼            ▼
- Check        Check that
- power        channel's:
- supply       • Output transistors
- rails        • Driver transistors
- ±25V         • Bias components
- ±23V
- ±14V
-    │
-    ▼
- If rails    If rails
- low or      OK, check
- unstable:   preamp
- DC/DC       op-amps
- problem
-```
+{{< graphviz >}}
+digraph distorted {
+    rankdir=TB
+    splines=ortho
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    start [label="Distorted output", fillcolor="#ffcccc"]
+    question [label="All channels or\nspecific channel?", shape=diamond, fillcolor="#fff2cc"]
+
+    all_ch [label="ALL channels", fillcolor="#e0e0e0"]
+    specific [label="SPECIFIC channel", fillcolor="#e0e0e0"]
+
+    check_rails [label="Check power supply rails\n±25V, ±23V, ±14V", fillcolor="#d9e8fb"]
+    check_channel [label="Check that channel's:\n• Output transistors\n• Driver transistors\n• Bias components", fillcolor="#d9e8fb"]
+
+    rails_q [label="Rails OK?", shape=diamond, fillcolor="#fff2cc"]
+    dcdc_prob [label="DC/DC problem\nCheck converter", fillcolor="#ffcccc"]
+    preamp_prob [label="Check preamp\nop-amps", fillcolor="#d9e8fb"]
+
+    start -> question
+    question -> all_ch [label="ALL"]
+    question -> specific [label="ONE"]
+
+    all_ch -> check_rails -> rails_q
+    specific -> check_channel
+
+    rails_q -> dcdc_prob [label="NO\n(low/unstable)"]
+    rails_q -> preamp_prob [label="YES"]
+}
+{{< /graphviz >}}
 
 ---
 
 ## Symptom: Blows Fuses
 
-```
-Blows fuses immediately
-            │
-            ▼
-    ┌───────────────────┐
-    │Remove FETs        │
-    │Q903-Q906          │
-    └─────────┬─────────┘
-              │
-              ▼
-    ┌───────────────────┐
-    │Still blows fuses? │
-    └─────────┬─────────┘
-              │
-        ┌─────┴─────┐
-        ▼           ▼
-       YES          NO
-        │            │
-        ▼            ▼
-    Short is      FETs were
-    before the    shorted
-    FETs:         │
-    • Fuse holder ▼
-    • Wiring      Check what
-    • L920        killed the
-    • Capacitors  FETs:
-                  • Q901/Q902
-                  • Secondary
-                    diodes
-                  • Transformer
-```
+{{< graphviz >}}
+digraph fuses {
+    rankdir=TB
+    splines=ortho
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    start [label="Blows fuses\nimmediately", fillcolor="#ffcccc"]
+    remove [label="Remove FETs\nQ903-Q906", fillcolor="#d9e8fb"]
+    still_q [label="Still blows\nfuses?", shape=diamond, fillcolor="#fff2cc"]
+
+    yes_short [label="Short is before FETs:\n• Fuse holder\n• Wiring\n• L920\n• Capacitors", fillcolor="#ffcccc"]
+
+    no_fets [label="FETs were shorted", fillcolor="#fff2cc"]
+    check_cause [label="Check what killed FETs:\n• Q901/Q902\n• Secondary diodes\n• Transformer", fillcolor="#d9e8fb"]
+
+    start -> remove -> still_q
+    still_q -> yes_short [label="YES"]
+    still_q -> no_fets [label="NO"]
+    no_fets -> check_cause
+}
+{{< /graphviz >}}
 
 ---
 
 ## Symptom: Protection Triggers / Muted
 
-```
-Amplifier stays muted
-(LED on but no output)
-            │
-            ▼
-    ┌───────────────────┐
-    │Wait 5+ seconds    │
-    │(turn-on delay)    │
-    └─────────┬─────────┘
-              │
-              ▼
-    ┌───────────────────┐
-    │Still muted?       │
-    └─────────┬─────────┘
-              │
-        ┌─────┴─────┐
-        ▼           ▼
-       YES          NO
-        │            │
-        ▼            ▼
-    Protection    Normal
-    is active     operation
-        │
-        ▼
-    ┌───────────────────┐
-    │Check for:         │
-    │• DC at outputs    │
-    │• Overheating      │
-    │• Shorted speaker  │
-    │• Low supply volt  │
-    └───────────────────┘
-```
+{{< graphviz >}}
+digraph protection {
+    rankdir=TB
+    splines=ortho
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    start [label="Amplifier stays muted\n(LED on but no output)", fillcolor="#ffcccc"]
+    wait [label="Wait 5+ seconds\n(turn-on delay)", fillcolor="#d9e8fb"]
+    still_q [label="Still muted?", shape=diamond, fillcolor="#fff2cc"]
+
+    normal [label="Normal\noperation", fillcolor="#d9fbd9"]
+    protection [label="Protection\nis active", fillcolor="#ffcccc"]
+
+    check [label="Check for:\n• DC at outputs\n• Overheating\n• Shorted speaker\n• Low supply voltage", fillcolor="#d9e8fb"]
+
+    start -> wait -> still_q
+    still_q -> normal [label="NO"]
+    still_q -> protection [label="YES"]
+    protection -> check
+}
+{{< /graphviz >}}
 
 ---
 
 ## Symptom: Supply Voltage Drops Under Load
 
-```
-Supply voltage drops when FETs installed
-            │
-            ▼
-    ┌───────────────────┐
-    │How far does it    │
-    │drop?              │
-    └─────────┬─────────┘
-              │
-    ┌─────────┼─────────┐
-    ▼         ▼         ▼
- Near 0V   ~8-10V    ~12V but
- Dead      Clamped   unstable
- Short                  │
-    │         │         ▼
-    ▼         ▼      Marginal
- Check     FETs in   component
- for       linear    or
- shorted   mode -    connection
- FET or    check     issue
- diode     gate
-           drivers
-           Q901/Q902
-```
+{{< graphviz >}}
+digraph voltage_drop {
+    rankdir=TB
+    splines=ortho
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10]
+    edge [fontname="Helvetica", fontsize=9]
+
+    start [label="Supply voltage drops\nwhen FETs installed", fillcolor="#ffcccc"]
+    question [label="How far does\nit drop?", shape=diamond, fillcolor="#fff2cc"]
+
+    near_zero [label="Near 0V\nDead Short", fillcolor="#ff9999"]
+    clamped [label="~8-10V\nClamped", fillcolor="#ffcccc"]
+    unstable [label="~12V but\nunstable", fillcolor="#fff2cc"]
+
+    check_short [label="Check for shorted\nFET or diode", fillcolor="#d9e8fb"]
+    check_gate [label="FETs in linear mode\nCheck gate drivers\nQ901/Q902", fillcolor="#d9e8fb"]
+    check_marginal [label="Marginal component\nor connection issue", fillcolor="#d9e8fb"]
+
+    start -> question
+    question -> near_zero
+    question -> clamped
+    question -> unstable
+
+    near_zero -> check_short
+    clamped -> check_gate
+    unstable -> check_marginal
+}
+{{< /graphviz >}}
 
 ---
 
