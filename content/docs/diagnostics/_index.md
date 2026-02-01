@@ -29,6 +29,9 @@ Reference voltage tables for all ICs and transistors under normal operating cond
 ### [Troubleshooting Flowchart]({{< relref "/docs/diagnostics/flowchart" >}})
 Decision tree for common symptoms.
 
+### [Post-Repair Verification]({{< relref "/docs/diagnostics/post-repair-verification" >}})
+Full post-repair verification plan for car audio amplifiers — from cold board to confirmed-reliable.
+
 ## Equipment Required
 
 | Equipment | Purpose |
